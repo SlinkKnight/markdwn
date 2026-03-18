@@ -61,13 +61,11 @@ html, body {
   padding: 0 16vw;
 }
 
-/* separator: no background fill, just a gruvbox-tinted left-border line */
 .sep {
-  width: 1px;
+  width: 2px;             /* slightly thicker */
   flex-shrink: 0;
-  background: transparent;
-  border-right: 1px solid var(--bg1);
-  opacity: 0.5;
+  background: var(--bg1);
+  opacity: 0.6;
 }
 
 #editor {
@@ -94,23 +92,23 @@ html, body {
 /* ── STAR BUTTON ── */
 #star-btn {
   position: fixed;
-  top: 14px; right: 18px;
+  top: 13px; right: 16px;
   background: none; border: none;
   color: var(--bg3);
-  font-size: 18px;
+  font-size: 22px;        /* slightly bigger */
   cursor: pointer;
   line-height: 1;
-  transition: color 0.15s;
+  transition: color 0.15s, transform 0.15s;
   z-index: 100;
-  display: none; /* shown only when a doc is loaded */
+  display: none;
 }
-#star-btn:hover        { color: var(--yellow); }
-#star-btn.starred      { color: var(--yellow); }
+#star-btn:hover   { color: var(--yellow); transform: scale(1.15); }
+#star-btn.starred { color: var(--yellow); }
 
 /* ── READING LIST PANEL ── */
 #rl-panel {
   position: fixed;
-  top: 40px; right: 14px;
+  top: 44px; right: 12px;
   background: var(--bg);
   border: 1px solid var(--bg1);
   border-radius: 3px;
@@ -130,37 +128,27 @@ html, body {
 }
 #rl-header span {
   font-family: var(--mono); font-size: 10px;
-  letter-spacing: 0.12em; color: var(--fg4);
-  text-transform: lowercase;
+  letter-spacing: 0.12em; color: var(--fg4); text-transform: lowercase;
 }
 #rl-clear {
   background: none; border: none;
   font-family: var(--mono); font-size: 9px;
-  color: var(--bg3); cursor: pointer;
-  transition: color 0.12s;
+  color: var(--bg3); cursor: pointer; transition: color 0.12s;
 }
 #rl-clear:hover { color: var(--red); }
 
 #rl-list { list-style: none; padding: 4px 0; }
-#rl-list li {
-  display: flex; align-items: center;
-  padding: 0 8px 0 12px;
-  gap: 6px;
-}
+#rl-list li { display: flex; align-items: center; padding: 0 8px 0 12px; gap: 6px; }
 #rl-list li a {
-  flex: 1;
-  font-family: var(--mono); font-size: 10.5px;
+  flex: 1; font-family: var(--mono); font-size: 10.5px;
   color: var(--blue); text-decoration: none;
-  padding: 7px 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  transition: color 0.12s;
-  display: block;
+  padding: 7px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.12s; display: block;
 }
 #rl-list li a:hover { color: var(--aqua); }
 #rl-list li .rl-del {
-  background: none; border: none;
-  color: var(--bg3); cursor: pointer;
-  font-size: 12px; line-height: 1;
+  background: none; border: none; color: var(--bg3);
+  cursor: pointer; font-size: 12px; line-height: 1;
   transition: color 0.12s; flex-shrink: 0;
 }
 #rl-list li .rl-del:hover { color: var(--red); }
@@ -192,6 +180,55 @@ html, body {
 /* ── CONTENT ── */
 #content { opacity: 0; transform: translateY(4px); transition: opacity 0.35s ease, transform 0.35s ease; }
 #content.visible { opacity: 1; transform: none; }
+
+/* ── HEADING ANCHOR HIGHLIGHT ── */
+.heading-target {
+  animation: flash 1.2s ease forwards;
+}
+@keyframes flash {
+  0%   { background: rgba(250,189,47,0.18); }
+  100% { background: transparent; }
+}
+
+/* ── COLLAPSIBLE SECTIONS ── */
+.section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+}
+
+.toggle-arrow {
+  display: inline-block;
+  font-size: 0.65em;
+  color: var(--bg4);
+  margin-right: 6px;
+  transition: transform 0.18s ease, color 0.12s;
+  flex-shrink: 0;
+  line-height: 1;
+  transform: rotate(90deg); /* open by default = pointing down */
+}
+
+.section-toggle:hover .toggle-arrow { color: var(--fg4); }
+
+.section-body {
+  overflow: hidden;
+  transition: max-height 0.22s ease, opacity 0.18s ease;
+  max-height: 9999px;
+  opacity: 1;
+}
+
+.section-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.toggle-arrow.collapsed {
+  transform: rotate(0deg); /* pointing right when closed */
+  color: var(--bg3);
+}
 
 /* ══════════════════
    MARKDOWN TYPOGRAPHY
@@ -234,8 +271,7 @@ html, body {
   padding: 0.05em 1em; margin: 1.2em 0;
   color: var(--fg4); font-style: italic;
   font-family: var(--serif); font-size: 15.5px;
-  background: rgba(40,36,34,0.5);
-  border-radius: 0 2px 2px 0;
+  background: rgba(40,36,34,0.5); border-radius: 0 2px 2px 0;
 }
 #content hr { border: none; border-top: 1px solid var(--bg1); margin: 2em 0; }
 
@@ -324,10 +360,8 @@ html, body {
 </head>
 <body>
 
-<!-- star button (top-right) -->
 <button id="star-btn" title="Save to reading list">☆</button>
 
-<!-- reading list panel -->
 <div id="rl-panel">
   <div id="rl-header">
     <span>reading list</span>
@@ -346,6 +380,7 @@ html, body {
       <div class="ec"><span class="p">--</span> <span class="s">?github.com/user/repo/blob/main/file.md</span></div>
       <div class="ec"><span class="p">--</span> <span class="s">?github.com/user/repo</span>  → readme</div>
       <div class="ec"><span class="p">--</span> <span class="s">?raw.githubusercontent.com/…</span></div>
+      <div class="ec"><span class="p">--</span> add <span class="s">#heading-slug</span> to jump to a section</div>
     </div>
     <div id="content"></div>
   </div>
@@ -353,7 +388,7 @@ html, body {
 </div>
 
 <script>
-// ── COOKIE HELPERS ────────────────────────────────────────────
+// ── COOKIE HELPERS ────────────────────────────────────
 const COOKIE_KEY = 'markdwn_rl';
 
 function rlLoad() {
@@ -361,14 +396,12 @@ function rlLoad() {
   if (!m) return [];
   try { return JSON.parse(decodeURIComponent(m[1])); } catch { return []; }
 }
-
 function rlSave(list) {
-  // expires 1 year
   const exp = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
   document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(list))};expires=${exp};path=/`;
 }
 
-// ── READING LIST UI ───────────────────────────────────────────
+// ── READING LIST ──────────────────────────────────────
 let currentUrl = null;
 
 function rlRender() {
@@ -377,82 +410,134 @@ function rlRender() {
   const empty = document.getElementById('rl-empty');
   ul.innerHTML = '';
   empty.style.display = list.length ? 'none' : 'block';
-
   list.forEach((url, i) => {
-    // derive a short label from the url
     const label = url.replace(/^https?:\/\//, '')
                      .replace('raw.githubusercontent.com/', '')
                      .replace('github.com/', '');
     const li  = document.createElement('li');
     const a   = document.createElement('a');
-    a.href  = '?' + url;
-    a.title = url;
-    a.textContent = label;
-
+    a.href = '?' + url; a.title = url; a.textContent = label;
     const del = document.createElement('button');
-    del.className   = 'rl-del';
-    del.textContent = '×';
+    del.className = 'rl-del'; del.textContent = '×';
     del.onclick = (e) => {
       e.stopPropagation();
-      const l = rlLoad();
-      l.splice(i, 1);
-      rlSave(l);
-      rlRender();
-      if (currentUrl === url) updateStar();
+      const l = rlLoad(); l.splice(i, 1); rlSave(l);
+      rlRender(); if (currentUrl === url) updateStar();
     };
-
-    li.appendChild(a);
-    li.appendChild(del);
-    ul.appendChild(li);
+    li.appendChild(a); li.appendChild(del); ul.appendChild(li);
   });
 }
 
 function updateStar() {
   const btn  = document.getElementById('star-btn');
-  const list = rlLoad();
-  const saved = currentUrl && list.includes(currentUrl);
+  const saved = currentUrl && rlLoad().includes(currentUrl);
   btn.textContent = saved ? '★' : '☆';
   btn.classList.toggle('starred', !!saved);
 }
 
-// star click: toggle save + open panel
 document.getElementById('star-btn').addEventListener('click', () => {
   if (!currentUrl) return;
   let list = rlLoad();
   const idx = list.indexOf(currentUrl);
-  if (idx === -1) list.push(currentUrl);
-  else            list.splice(idx, 1);
-  rlSave(list);
-  updateStar();
-  rlRender();
-  // open panel briefly when saving
-  if (list.includes(currentUrl)) {
-    document.getElementById('rl-panel').classList.add('open');
-  }
+  if (idx === -1) list.push(currentUrl); else list.splice(idx, 1);
+  rlSave(list); updateStar(); rlRender();
+  if (list.includes(currentUrl)) document.getElementById('rl-panel').classList.add('open');
 });
-
-// long-press / right-click star to open panel without toggling
 document.getElementById('star-btn').addEventListener('contextmenu', (e) => {
   e.preventDefault();
   document.getElementById('rl-panel').classList.toggle('open');
 });
-
-// close panel on outside click
 document.addEventListener('click', (e) => {
   const panel = document.getElementById('rl-panel');
   const star  = document.getElementById('star-btn');
-  if (!panel.contains(e.target) && e.target !== star) {
-    panel.classList.remove('open');
-  }
+  if (!panel.contains(e.target) && e.target !== star) panel.classList.remove('open');
 });
-
 document.getElementById('rl-clear').addEventListener('click', () => {
-  rlSave([]);
-  rlRender();
-  updateStar();
+  rlSave([]); rlRender(); updateStar();
 });
 
-// ── MARKDOWN ENGINE ───────────────────────────────────────────
+// ── SLUG HELPER ───────────────────────────────────────
+// Matches GitHub's heading slug algorithm
+function slugify(text) {
+  return text.toLowerCase()
+    .replace(/[^\w\s-]/g, '')   // strip non-word chars (except hyphen)
+    .trim()
+    .replace(/[\s_]+/g, '-');   // spaces/underscores → hyphen
+}
+
+// ── ANCHOR JUMP ───────────────────────────────────────
+// After render, scroll to #slug if present in the page URL
+function jumpToHash() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  const target = document.getElementById(hash);
+  if (!target) return;
+  // slight delay so layout is stable
+  setTimeout(() => {
+    const editor = document.getElementById('editor');
+    const top = target.offsetTop - 32;
+    editor.scrollTo({ top, behavior: 'smooth' });
+    target.classList.add('heading-target');
+    setTimeout(() => target.classList.remove('heading-target'), 1200);
+  }, 80);
+}
+
+// ── COLLAPSIBLE SECTIONS ─────────────────────────────
+// Wraps each heading + everything until the next same-or-higher heading
+// into a collapsible section with a ▶ toggle arrow.
+function makeCollapsible() {
+  const content = document.getElementById('content');
+  const headings = Array.from(content.querySelectorAll('h1,h2,h3,h4,h5,h6'));
+
+  headings.forEach(h => {
+    const level = parseInt(h.tagName[1]);
+
+    // Collect all sibling nodes until next heading of same or higher level
+    const body = [];
+    let sibling = h.nextSibling;
+    while (sibling) {
+      const isHeading = sibling.nodeType === 1 &&
+        /^H[1-6]$/.test(sibling.tagName) &&
+        parseInt(sibling.tagName[1]) <= level;
+      if (isHeading) break;
+      body.push(sibling);
+      sibling = sibling.nextSibling;
+    }
+
+    // Only add toggle if there's something to collapse
+    if (!body.length) return;
+
+    // Build toggle wrapper around heading text
+    const arrow = document.createElement('span');
+    arrow.className = 'toggle-arrow';
+    arrow.textContent = '▶';
+
+    const wrapper = document.createElement('span');
+    wrapper.className = 'section-toggle';
+    // move heading's children into wrapper
+    while (h.firstChild) wrapper.appendChild(h.firstChild);
+    h.insertBefore(arrow, h.firstChild);
+    h.appendChild(wrapper);
+    // fix: actually put arrow before wrapper text
+    h.insertBefore(arrow, wrapper);
+
+    // Wrap body nodes in a section-body div
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'section-body';
+    const ref = body[0];
+    ref.parentNode.insertBefore(bodyDiv, ref);
+    body.forEach(n => bodyDiv.appendChild(n));
+
+    // Toggle on click
+    h.style.cursor = 'pointer';
+    h.addEventListener('click', () => {
+      const collapsed = bodyDiv.classList.toggle('collapsed');
+      arrow.classList.toggle('collapsed', collapsed);
+    });
+  });
+}
+
+// ── MARKDOWN ENGINE ───────────────────────────────────
 function waitFor(fn, cb, ms = 50) {
   if (fn()) cb(); else setTimeout(() => waitFor(fn, cb, ms), ms);
 }
@@ -530,8 +615,17 @@ function wrapTables() {
     if (t.parentElement.classList.contains('table-wrap')) return;
     const w = document.createElement('div');
     w.className = 'table-wrap';
-    t.parentNode.insertBefore(w, t);
-    w.appendChild(t);
+    t.parentNode.insertBefore(w, t); w.appendChild(t);
+  });
+}
+
+// Add id anchors to all headings (slug-based)
+function addHeadingIds() {
+  const seen = {};
+  document.querySelectorAll('#content h1,#content h2,#content h3,#content h4,#content h5,#content h6').forEach(h => {
+    let slug = slugify(h.textContent);
+    if (seen[slug]) { seen[slug]++; slug += '-' + seen[slug]; } else seen[slug] = 0;
+    h.id = slug;
   });
 }
 
@@ -553,7 +647,6 @@ async function loadMarkdown(rawUrl) {
       md = await r.text();
     }
 
-    // expose for reading list
     currentUrl = location.search.slice(1);
     document.getElementById('star-btn').style.display = 'block';
     updateStar();
@@ -564,11 +657,16 @@ async function loadMarkdown(rawUrl) {
     waitFor(() => typeof marked !== 'undefined', () => {
       marked.setOptions({ gfm: true, breaks: false });
       content.innerHTML = marked.parse(md);
+
+      addHeadingIds();
+      makeCollapsible();
       fixImages(base);
       wrapTables();
       attachCopyBtns();
+
       if (typeof hljs !== 'undefined')
         content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+
       if (typeof renderMathInElement !== 'undefined')
         renderMathInElement(content, {
           delimiters: [
@@ -579,7 +677,11 @@ async function loadMarkdown(rawUrl) {
           ],
           throwOnError: false, errorColor: '#fb4934',
         });
-      requestAnimationFrame(() => content.classList.add('visible'));
+
+      requestAnimationFrame(() => {
+        content.classList.add('visible');
+        jumpToHash();
+      });
     });
 
   } catch(e) {
@@ -591,11 +693,22 @@ async function loadMarkdown(rawUrl) {
   }
 }
 
-// init reading list
 rlRender();
 
-const qs = location.search.slice(1);
-if (qs) loadMarkdown(toRawUrl(decodeURIComponent(qs)));
+// Strip the #hash from the query string before parsing the URL
+// URL format: ?github.com/user/repo/blob/main/file.md#my-heading
+const raw = location.search.slice(1);
+if (raw) {
+  // split on first # that appears after the url part (not inside a github path)
+  // safe split: everything before first standalone #
+  const hashIdx = raw.indexOf('#');
+  const urlPart  = hashIdx === -1 ? raw : raw.slice(0, hashIdx);
+  // put hash into actual location.hash so jumpToHash() can read it
+  if (hashIdx !== -1 && !location.hash) {
+    history.replaceState(null, '', location.search + '#' + raw.slice(hashIdx + 1));
+  }
+  loadMarkdown(toRawUrl(decodeURIComponent(urlPart)));
+}
 </script>
 </body>
 </html>
