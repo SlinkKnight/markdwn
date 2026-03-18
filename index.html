@@ -8,6 +8,10 @@
 <!-- marked: defer so it doesn't block render -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
 
+<!-- Lora: preload so it doesn't block render -->
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap"></noscript>
+
 <!-- KaTeX: preload CSS, defer scripts -->
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"></noscript>
@@ -41,7 +45,7 @@
   --sep:    #3c3836;
   /* system font stacks — zero network cost */
   --mono:  ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace;
-  --serif: Georgia, 'Times New Roman', serif;
+  --serif: 'Lora', Georgia, serif;
 }
 
 html, body {
@@ -59,7 +63,7 @@ html, body {
 #layout {
   display: grid;
   grid-template-columns: 1px 1fr 1px;
-  padding: 0 11vw;
+  padding: 0 5vw;
   height: 100vh;
 }
 
