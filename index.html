@@ -213,10 +213,11 @@ html, body {
   font-size: 9px;
   color: var(--bg4);
   opacity: 0;
-  transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.4,0,0.2,1), color 0.15s ease;
-  pointer-events: none;
+  transition: opacity 0.08s ease, transform 0.12s cubic-bezier(0.4,0,0.2,1), color 0.08s ease;
+  pointer-events: auto;
   line-height: 1;
   user-select: none;
+  cursor: pointer;
 }
 
 /* show on hover of the heading */
@@ -239,8 +240,8 @@ html, body {
 
 .section-body {
   overflow: hidden;
-  transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.22s ease;
+  transition: max-height 0.18s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.14s ease;
   max-height: 9999px;
   opacity: 1;
 }
@@ -398,7 +399,7 @@ html, body {
     <div id="empty">
       <div class="ec"><span class="p">--</span> markdwn</div>
       <div class="ec"><span class="p">--</span> <span class="s">?github.com/user/repo/blob/main/file.md</span></div>
-      <div class="ec"><span class="p">--</span> add <span class="s">#heading-slug</span> to jump to a section</div>
+      <div class="ec"><span class="p">--</span> add <span class="s">#heading</span> to jump to a section</div>
     </div>
     <div id="content"></div>
   </div>
