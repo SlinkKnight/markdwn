@@ -61,15 +61,22 @@ html, body {
 /* ── LAYOUT: thin sep | content | thin sep ── */
 /* sep columns are ~11% of viewport each = ~0.6/3 of screen as requested */
 #layout {
-  display: grid;
-  grid-template-columns: 1px 1fr 1px;
-  padding: 0 16vw;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   height: 100vh;
+  padding: 0 16vw;
 }
 
-.sep { background: var(--sep); }
+.sep {
+  width: 1px;
+  flex-shrink: 0;
+  background: var(--sep);
+}
 
 #editor {
+  flex: 1;
+  min-width: 0;          /* prevent flex blowout */
   overflow-y: auto;
   overflow-x: hidden;
   height: 100vh;
@@ -81,9 +88,9 @@ html, body {
 #editor::-webkit-scrollbar-thumb  { background: var(--bg2); }
 #editor::-webkit-scrollbar-thumb:hover { background: var(--bg3); }
 
-/* mobile: no bars */
+/* mobile: no bars, full width */
 @media (max-width: 640px) {
-  #layout { grid-template-columns: 0 1fr 0; padding: 0; }
+  #layout { padding: 0; }
   .sep    { display: none; }
   #editor { padding: 24px 18px 80px; }
 }
@@ -222,7 +229,7 @@ html, body {
 }
 
 /* ── KATEX ── */
-.katex-display { overflow-x: auto; padding: 6px 0; margin: 1.2em 0 !important; }
+.katex-display { overflow: visible; padding: 6px 0; margin: 1.2em 0 !important; }
 .katex { font-size: 1.05em !important; }
 
 /* ── SKELETON ── */
