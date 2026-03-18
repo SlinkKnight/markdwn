@@ -52,7 +52,7 @@ html, body {
 #layout {
   display: grid;
   grid-template-columns: 1px 1fr 1px;
-  padding: 0 60px;
+  padding: 0 36px;
   height: 100vh;
 }
 
@@ -62,7 +62,16 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   height: 100vh;
-  padding: 48px 52px 120px;
+  padding: 48px 48px 120px;
+}
+
+@media (max-width: 640px) {
+  #layout {
+    grid-template-columns: 0 1fr 0;
+    padding: 0;
+  }
+  .sep { display: none; }
+  #editor { padding: 28px 20px 80px; }
 }
 
 #editor::-webkit-scrollbar        { width: 6px; }
@@ -143,17 +152,30 @@ html, body {
 
 #content hr { border: none; border-top: 1px solid var(--bg1); margin: 2.2em 0; }
 
+/* table wrapper — scrollable, never full width */
+.table-wrap {
+  overflow-x: auto;
+  margin: 1.3em 0;
+  max-width: 100%;
+}
 #content table {
-  width: 100%; border-collapse: collapse;
-  font-family: var(--mono); font-size: 12.5px; margin: 1.3em 0;
+  width: auto;          /* shrink to content */
+  min-width: 240px;
+  border-collapse: collapse;
+  font-family: var(--mono); font-size: 12.5px;
+  table-layout: auto;   /* columns sized by content */
+  margin: 0;
+}
+#content th, #content td {
+  white-space: nowrap;  /* consistent, no wrapping surprises */
 }
 #content th {
-  text-align: left; padding: 6px 12px;
+  text-align: left; padding: 6px 20px 6px 12px;
   background: rgba(60,56,54,0.4);
   border-bottom: 1px solid var(--bg2);
   color: var(--yellow); font-weight: 400; letter-spacing: 0.06em;
 }
-#content td { padding: 5px 12px; border-bottom: 1px solid rgba(60,56,54,0.6); color: var(--fg3); }
+#content td { padding: 5px 20px 5px 12px; border-bottom: 1px solid rgba(60,56,54,0.6); color: var(--fg3); }
 #content tr:last-child td { border-bottom: none; }
 #content tr:hover td { background: rgba(60,56,54,0.2); }
 
@@ -347,6 +369,16 @@ async function loadMarkdown(rawUrl) {
       throwOnError: false, errorColor: '#fb4934',
     });
     attachCopyBtns();
+
+    // wrap tables in scrollable div so last col never bleeds to edge
+    content.querySelectorAll('table').forEach(t => {
+      if (t.parentElement.classList.contains('table-wrap')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'table-wrap';
+      t.parentNode.insertBefore(wrap, t);
+      wrap.appendChild(t);
+    });
+
     requestAnimationFrame(() => content.classList.add('visible'));
 
   } catch(e) {
