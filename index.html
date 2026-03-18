@@ -5,20 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>markdwn</title>
 
-<!-- marked: defer so it doesn't block render -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
 
-<!-- Lora: preload so it doesn't block render -->
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap"></noscript>
 
-<!-- KaTeX: preload CSS, defer scripts -->
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"></noscript>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 
-<!-- highlight.js: defer -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
 <style>
@@ -42,10 +38,8 @@
   --orange: #fe8019;
   --purple: #d3869b;
   --gray:   #928374;
-  --sep:    #3c3836;
-  /* system font stacks — zero network cost */
-  --mono:  ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace;
-  --serif: 'Lora', Georgia, serif;
+  --mono:   ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace;
+  --serif:  'Lora', Georgia, serif;
 }
 
 html, body {
@@ -58,8 +52,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── LAYOUT: thin sep | content | thin sep ── */
-/* sep columns are ~11% of viewport each = ~0.6/3 of screen as requested */
+/* ── LAYOUT ── */
 #layout {
   display: flex;
   flex-direction: row;
@@ -68,19 +61,23 @@ html, body {
   padding: 0 16vw;
 }
 
+/* separator: no background fill, just a gruvbox-tinted left-border line */
 .sep {
   width: 1px;
   flex-shrink: 0;
-  background: var(--sep);
+  background: transparent;
+  border-right: 1px solid var(--bg1);
+  opacity: 0.5;
 }
 
 #editor {
   flex: 1;
-  min-width: 0;          /* prevent flex blowout */
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   height: 100vh;
   padding: 48px 40px 120px;
+  position: relative;
 }
 
 #editor::-webkit-scrollbar        { width: 5px; }
@@ -88,11 +85,90 @@ html, body {
 #editor::-webkit-scrollbar-thumb  { background: var(--bg2); }
 #editor::-webkit-scrollbar-thumb:hover { background: var(--bg3); }
 
-/* mobile: no bars, full width */
 @media (max-width: 640px) {
   #layout { padding: 0; }
   .sep    { display: none; }
   #editor { padding: 24px 18px 80px; }
+}
+
+/* ── STAR BUTTON ── */
+#star-btn {
+  position: fixed;
+  top: 14px; right: 18px;
+  background: none; border: none;
+  color: var(--bg3);
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+  z-index: 100;
+  display: none; /* shown only when a doc is loaded */
+}
+#star-btn:hover        { color: var(--yellow); }
+#star-btn.starred      { color: var(--yellow); }
+
+/* ── READING LIST PANEL ── */
+#rl-panel {
+  position: fixed;
+  top: 40px; right: 14px;
+  background: var(--bg);
+  border: 1px solid var(--bg1);
+  border-radius: 3px;
+  min-width: 240px; max-width: 320px;
+  max-height: 60vh;
+  overflow-y: auto;
+  display: none;
+  z-index: 99;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+#rl-panel.open { display: block; }
+
+#rl-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--bg1);
+}
+#rl-header span {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.12em; color: var(--fg4);
+  text-transform: lowercase;
+}
+#rl-clear {
+  background: none; border: none;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--bg3); cursor: pointer;
+  transition: color 0.12s;
+}
+#rl-clear:hover { color: var(--red); }
+
+#rl-list { list-style: none; padding: 4px 0; }
+#rl-list li {
+  display: flex; align-items: center;
+  padding: 0 8px 0 12px;
+  gap: 6px;
+}
+#rl-list li a {
+  flex: 1;
+  font-family: var(--mono); font-size: 10.5px;
+  color: var(--blue); text-decoration: none;
+  padding: 7px 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.12s;
+  display: block;
+}
+#rl-list li a:hover { color: var(--aqua); }
+#rl-list li .rl-del {
+  background: none; border: none;
+  color: var(--bg3); cursor: pointer;
+  font-size: 12px; line-height: 1;
+  transition: color 0.12s; flex-shrink: 0;
+}
+#rl-list li .rl-del:hover { color: var(--red); }
+
+#rl-empty {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--bg3); font-style: italic;
+  padding: 12px; display: none;
 }
 
 /* ── EMPTY STATE ── */
@@ -113,14 +189,13 @@ html, body {
   color: var(--red); margin-bottom: 1.2em; display: none;
 }
 
-/* ── CONTENT FADE ── */
+/* ── CONTENT ── */
 #content { opacity: 0; transform: translateY(4px); transition: opacity 0.35s ease, transform 0.35s ease; }
 #content.visible { opacity: 1; transform: none; }
 
-/* ══════════════════════════
+/* ══════════════════
    MARKDOWN TYPOGRAPHY
-   ══════════════════════════ */
-
+   ══════════════════ */
 #content h1,#content h2,#content h3,
 #content h4,#content h5,#content h6 {
   font-family: var(--mono); font-weight: 400;
@@ -139,17 +214,14 @@ html, body {
   margin: 0 0 1em; color: var(--fg2);
   font-family: var(--serif); font-size: 15.5px; line-height: 1.82;
 }
-
 #content a {
   color: var(--blue); text-decoration: none;
   border-bottom: 1px solid rgba(131,165,152,0.25);
   transition: color .12s, border-color .12s;
 }
 #content a:hover { color: var(--aqua); border-color: var(--aqua); }
-
 #content strong { color: var(--fg);  font-weight: 600; }
 #content em     { color: var(--fg3); font-style: italic; }
-
 #content ul,#content ol {
   padding-left: 1.5em; margin: 0 0 1em;
   font-family: var(--serif); font-size: 15.5px;
@@ -157,7 +229,6 @@ html, body {
 }
 #content li { margin-bottom: 0.2em; }
 #content li::marker { color: var(--orange); font-family: var(--mono); font-size: 13px; }
-
 #content blockquote {
   border-left: 2px solid var(--orange);
   padding: 0.05em 1em; margin: 1.2em 0;
@@ -166,39 +237,33 @@ html, body {
   background: rgba(40,36,34,0.5);
   border-radius: 0 2px 2px 0;
 }
-
 #content hr { border: none; border-top: 1px solid var(--bg1); margin: 2em 0; }
 
-/* ── TABLES ── */
+/* tables */
 .table-wrap { overflow-x: auto; margin: 1.2em 0; max-width: 100%; }
 #content table {
-  width: auto; min-width: 240px;
-  border-collapse: collapse;
-  font-family: var(--mono); font-size: 12.5px;
-  table-layout: auto; margin: 0;
+  width: auto; min-width: 240px; border-collapse: collapse;
+  font-family: var(--mono); font-size: 12.5px; table-layout: auto; margin: 0;
 }
 #content th, #content td { white-space: nowrap; }
 #content th {
   text-align: left; padding: 6px 20px 6px 12px;
-  background: rgba(60,56,54,0.4);
-  border-bottom: 1px solid var(--bg2);
+  background: rgba(60,56,54,0.4); border-bottom: 1px solid var(--bg2);
   color: var(--yellow); font-weight: 400; letter-spacing: 0.06em;
 }
 #content td { padding: 5px 20px 5px 12px; border-bottom: 1px solid rgba(60,56,54,0.6); color: var(--fg3); }
 #content tr:last-child td { border-bottom: none; }
 #content tr:hover td { background: rgba(60,56,54,0.2); }
 
-/* ── CODE ── */
+/* code */
 #content code {
   font-family: var(--mono); font-size: 12.5px;
-  background: rgba(60,56,54,0.5);
-  border-radius: 2px; padding: 1px 5px; color: var(--aqua);
+  background: rgba(60,56,54,0.5); border-radius: 2px;
+  padding: 1px 5px; color: var(--aqua);
 }
 #content pre {
-  background: #191b1c !important;
-  border-left: 2px solid var(--bg2);
-  padding: 13px 16px;
-  overflow-x: auto; margin: 1.2em 0; position: relative;
+  background: #191b1c !important; border-left: 2px solid var(--bg2);
+  padding: 13px 16px; overflow-x: auto; margin: 1.2em 0; position: relative;
 }
 #content pre code {
   background: none !important; border: none !important;
@@ -215,10 +280,9 @@ html, body {
 #content pre:hover .copy-btn { opacity: 1; }
 #content pre .copy-btn:hover { color: var(--yellow); border-color: var(--yellow); }
 
-/* ── IMAGES ── */
+/* images */
 #content img {
-  max-width: 100%; height: auto;
-  display: block; margin: 1.2em 0;
+  max-width: 100%; height: auto; display: block; margin: 1.2em 0;
   border: 1px solid var(--bg2); border-radius: 2px;
 }
 .img-broken {
@@ -228,11 +292,11 @@ html, body {
   border-radius: 2px; padding: 3px 8px; margin: 0.5em 0;
 }
 
-/* ── KATEX ── */
+/* katex */
 .katex-display { overflow: visible; padding: 6px 0; margin: 1.2em 0 !important; }
 .katex { font-size: 1.05em !important; }
 
-/* ── SKELETON ── */
+/* skeleton */
 .skeleton { display: flex; flex-direction: column; gap: 9px; }
 .skel-line { height: 11px; background: var(--bg1); border-radius: 1px; animation: sk 1.8s infinite; }
 @keyframes sk { 0%,100%{opacity:.2} 50%{opacity:.45} }
@@ -244,7 +308,7 @@ html, body {
 .skel-line:nth-child(6){width:83%;animation-delay:.42s;}
 .skel-line:nth-child(7){width:42%;animation-delay:.52s;margin-top:5px;}
 
-/* ── HLJS GRUVBOX ── */
+/* hljs gruvbox */
 .hljs-keyword,.hljs-selector-tag { color: #fb4934; }
 .hljs-built_in                    { color: #fabd2f; }
 .hljs-type                        { color: #8ec07c; }
@@ -259,6 +323,19 @@ html, body {
 </style>
 </head>
 <body>
+
+<!-- star button (top-right) -->
+<button id="star-btn" title="Save to reading list">☆</button>
+
+<!-- reading list panel -->
+<div id="rl-panel">
+  <div id="rl-header">
+    <span>reading list</span>
+    <button id="rl-clear">clear all</button>
+  </div>
+  <div id="rl-empty">-- no saved urls</div>
+  <ul id="rl-list"></ul>
+</div>
 
 <div id="layout">
   <div class="sep"></div>
@@ -276,7 +353,106 @@ html, body {
 </div>
 
 <script>
-// Wait for all deferred scripts to be ready
+// ── COOKIE HELPERS ────────────────────────────────────────────
+const COOKIE_KEY = 'markdwn_rl';
+
+function rlLoad() {
+  const m = document.cookie.match('(?:^|;)\\s*' + COOKIE_KEY + '=([^;]*)');
+  if (!m) return [];
+  try { return JSON.parse(decodeURIComponent(m[1])); } catch { return []; }
+}
+
+function rlSave(list) {
+  // expires 1 year
+  const exp = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
+  document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(list))};expires=${exp};path=/`;
+}
+
+// ── READING LIST UI ───────────────────────────────────────────
+let currentUrl = null;
+
+function rlRender() {
+  const list  = rlLoad();
+  const ul    = document.getElementById('rl-list');
+  const empty = document.getElementById('rl-empty');
+  ul.innerHTML = '';
+  empty.style.display = list.length ? 'none' : 'block';
+
+  list.forEach((url, i) => {
+    // derive a short label from the url
+    const label = url.replace(/^https?:\/\//, '')
+                     .replace('raw.githubusercontent.com/', '')
+                     .replace('github.com/', '');
+    const li  = document.createElement('li');
+    const a   = document.createElement('a');
+    a.href  = '?' + url;
+    a.title = url;
+    a.textContent = label;
+
+    const del = document.createElement('button');
+    del.className   = 'rl-del';
+    del.textContent = '×';
+    del.onclick = (e) => {
+      e.stopPropagation();
+      const l = rlLoad();
+      l.splice(i, 1);
+      rlSave(l);
+      rlRender();
+      if (currentUrl === url) updateStar();
+    };
+
+    li.appendChild(a);
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+}
+
+function updateStar() {
+  const btn  = document.getElementById('star-btn');
+  const list = rlLoad();
+  const saved = currentUrl && list.includes(currentUrl);
+  btn.textContent = saved ? '★' : '☆';
+  btn.classList.toggle('starred', !!saved);
+}
+
+// star click: toggle save + open panel
+document.getElementById('star-btn').addEventListener('click', () => {
+  if (!currentUrl) return;
+  let list = rlLoad();
+  const idx = list.indexOf(currentUrl);
+  if (idx === -1) list.push(currentUrl);
+  else            list.splice(idx, 1);
+  rlSave(list);
+  updateStar();
+  rlRender();
+  // open panel briefly when saving
+  if (list.includes(currentUrl)) {
+    document.getElementById('rl-panel').classList.add('open');
+  }
+});
+
+// long-press / right-click star to open panel without toggling
+document.getElementById('star-btn').addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  document.getElementById('rl-panel').classList.toggle('open');
+});
+
+// close panel on outside click
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('rl-panel');
+  const star  = document.getElementById('star-btn');
+  if (!panel.contains(e.target) && e.target !== star) {
+    panel.classList.remove('open');
+  }
+});
+
+document.getElementById('rl-clear').addEventListener('click', () => {
+  rlSave([]);
+  rlRender();
+  updateStar();
+});
+
+// ── MARKDOWN ENGINE ───────────────────────────────────────────
 function waitFor(fn, cb, ms = 50) {
   if (fn()) cb(); else setTimeout(() => waitFor(fn, cb, ms), ms);
 }
@@ -377,23 +553,22 @@ async function loadMarkdown(rawUrl) {
       md = await r.text();
     }
 
+    // expose for reading list
+    currentUrl = location.search.slice(1);
+    document.getElementById('star-btn').style.display = 'block';
+    updateStar();
+
     const base    = getBaseUrl(rawUrl);
     const content = document.getElementById('content');
 
-    // wait for marked (deferred) before parsing
     waitFor(() => typeof marked !== 'undefined', () => {
       marked.setOptions({ gfm: true, breaks: false });
       content.innerHTML = marked.parse(md);
-
       fixImages(base);
       wrapTables();
       attachCopyBtns();
-
-      // highlight.js — only if loaded
       if (typeof hljs !== 'undefined')
         content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
-
-      // KaTeX — only if loaded
       if (typeof renderMathInElement !== 'undefined')
         renderMathInElement(content, {
           delimiters: [
@@ -404,7 +579,6 @@ async function loadMarkdown(rawUrl) {
           ],
           throwOnError: false, errorColor: '#fb4934',
         });
-
       requestAnimationFrame(() => content.classList.add('visible'));
     });
 
@@ -416,6 +590,9 @@ async function loadMarkdown(rawUrl) {
     err.style.display = 'block';
   }
 }
+
+// init reading list
+rlRender();
 
 const qs = location.search.slice(1);
 if (qs) loadMarkdown(toRawUrl(decodeURIComponent(qs)));
