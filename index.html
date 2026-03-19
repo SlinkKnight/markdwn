@@ -143,6 +143,21 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--ser
 .hljs-params{color:#ebdbb2}
 .hljs-operator,.hljs-punctuation{color:#a89984}
 .hljs-meta{color:#fe8019}
+/* pdf embed */
+.pdf-embed{margin:1.4em 0;border:1px solid var(--bg2);border-radius:3px;overflow:hidden;background:#191b1c}
+.pdf-embed-bar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:rgba(60,56,54,0.45);border-bottom:1px solid var(--bg1)}
+.pdf-embed-title{font-family:var(--mono);font-size:10px;color:var(--fg4);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pdf-embed-bar button{background:none;border:1px solid var(--bg2);border-radius:2px;color:var(--fg4);font-family:var(--mono);font-size:9px;padding:3px 8px;cursor:pointer;transition:color .12s,border-color .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0}
+.pdf-embed-bar button:hover{color:var(--yellow);border-color:var(--yellow)}
+.pdf-embed-bar button:disabled{opacity:.28;cursor:default}
+.pdf-embed-pageinfo{font-family:var(--mono);font-size:9px;color:var(--fg4);white-space:nowrap;flex-shrink:0}
+.pdf-embed-zoom{font-family:var(--mono);font-size:9px;color:var(--bg3);flex-shrink:0}
+.pdf-embed-pages{display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px;max-height:72vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pdf-embed-pages::-webkit-scrollbar{width:4px}
+.pdf-embed-pages::-webkit-scrollbar-thumb{background:var(--bg2)}
+.pdf-embed-pages canvas{display:block;max-width:100%;border:1px solid var(--bg1);border-radius:1px}
+.pdf-embed-loading{font-family:var(--mono);font-size:10px;color:var(--fg4);padding:20px;text-align:center}
+.pdf-embed-err{font-family:var(--mono);font-size:10px;color:var(--red);padding:12px 14px}
 </style>
 </head>
 <body>
@@ -404,6 +419,7 @@ async function loadMarkdown(rawUrl) {
       fixImages(base);
       wrapTables();
       attachCopyBtns();
+      embedPdfs(base);
       if (typeof hljs !== 'undefined')
         content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
       if (typeof renderMathInElement !== 'undefined')
@@ -427,6 +443,150 @@ async function loadMarkdown(rawUrl) {
 }
 
 rlRender();
+
+/* ── pdf embed ──────────────────────────────────────────────────────────────
+   PDF.js 3.11 legacy/UMD build: no Promise.withResolvers, works on all
+   mobile browsers including older Safari/iOS.
+   Usage in markdown: ![My Doc](./file.pdf) or ![title](https://…/file.pdf)
+   ────────────────────────────────────────────────────────────────────────── */
+var PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+var _pdfLib = null, _pdfLibPromise = null;
+
+function getPdfLib() {
+  if (_pdfLib) return Promise.resolve(_pdfLib);
+  if (_pdfLibPromise) return _pdfLibPromise;
+  _pdfLibPromise = new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = PDFJS_CDN + 'pdf.min.js';
+    s.onload = function() {
+      var lib = window['pdfjs-dist/build/pdf'];
+      if (!lib) return reject(new Error('PDF.js failed to expose global'));
+      lib.GlobalWorkerOptions.workerSrc = PDFJS_CDN + 'pdf.worker.min.js';
+      _pdfLib = lib; resolve(lib);
+    };
+    s.onerror = function() { reject(new Error('Failed to load PDF.js')); };
+    document.head.appendChild(s);
+  });
+  return _pdfLibPromise;
+}
+
+function embedPdfs(base) {
+  document.querySelectorAll('#content img').forEach(function(img) {
+    var src = img.getAttribute('src') || '';
+    if (!/\.pdf(\?|#|$)/i.test(src)) return;
+
+    /* resolve url */
+    var url = src.startsWith('http') ? src : base + src.replace(/^\.\//, '');
+    var label = img.getAttribute('alt') || src.split('/').pop();
+
+    /* ── build widget DOM ── */
+    var wrap = document.createElement('div');
+    wrap.className = 'pdf-embed';
+
+    /* toolbar */
+    var bar   = document.createElement('div');  bar.className = 'pdf-embed-bar';
+    var ttl   = document.createElement('span'); ttl.className = 'pdf-embed-title'; ttl.textContent = label;
+    var prev  = document.createElement('button'); prev.textContent = '◀'; prev.disabled = true;
+    var info  = document.createElement('span'); info.className = 'pdf-embed-pageinfo'; info.textContent = '– / –';
+    var next  = document.createElement('button'); next.textContent = '▶'; next.disabled = true;
+    var zmsp  = document.createElement('span'); zmsp.className = 'pdf-embed-zoom';
+    var dlA   = document.createElement('a');    dlA.href = url; dlA.target = '_blank'; dlA.rel = 'noopener';
+    var dlBtn = document.createElement('button'); dlBtn.textContent = '↓'; dlA.appendChild(dlBtn);
+    bar.append(ttl, prev, info, next, zmsp, dlA);
+
+    /* pages area */
+    var loading = document.createElement('div'); loading.className = 'pdf-embed-loading'; loading.textContent = '-- loading…';
+    var pages   = document.createElement('div'); pages.className = 'pdf-embed-pages'; pages.style.display = 'none';
+
+    wrap.append(bar, loading, pages);
+    img.parentNode.replaceChild(wrap, img);
+
+    /* ── state ── */
+    var cur = 1, tot = 0;
+
+    function syncBar() {
+      info.textContent = cur + ' / ' + tot;
+      prev.disabled = cur <= 1;
+      next.disabled = cur >= tot;
+    }
+
+    function goTo(n) {
+      var cvs = pages.querySelectorAll('canvas');
+      if (cvs[n - 1]) cvs[n - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    pages.addEventListener('scroll', function() {
+      var pr = pages.getBoundingClientRect();
+      pages.querySelectorAll('canvas').forEach(function(c, i) {
+        var r = c.getBoundingClientRect();
+        if (r.top <= pr.top + pr.height * 0.5 && r.bottom >= pr.top) {
+          if (cur !== i + 1) { cur = i + 1; syncBar(); }
+        }
+      });
+    });
+    prev.addEventListener('click', function() { if (cur > 1)   { cur--; goTo(cur); syncBar(); } });
+    next.addEventListener('click', function() { if (cur < tot) { cur++; goTo(cur); syncBar(); } });
+
+    /* ── render ── */
+    function renderAll(lib) {
+      return lib.getDocument({ url: url, cMapUrl: PDFJS_CDN + 'cmaps/', cMapPacked: true }).promise
+        .then(function(doc) {
+          tot = doc.numPages;
+          loading.style.display = 'none';
+          pages.style.display   = 'flex';
+
+          /* container width available for CSS display */
+          var cW = Math.max(200, wrap.clientWidth - 30);
+          var dpr = window.devicePixelRatio || 1;
+
+          /* sequential render via chained promises */
+          var chain = Promise.resolve();
+          for (var i = 1; i <= tot; i++) {
+            (function(n) {
+              chain = chain.then(function() {
+                return doc.getPage(n).then(function(page) {
+                  var vp0     = page.getViewport({ scale: 1 });
+                  var cssScale  = cW / vp0.width;          /* fit width */
+                  var renderScale = cssScale * dpr;         /* hi-dpi pixels */
+                  var vp      = page.getViewport({ scale: renderScale });
+
+                  var canvas  = document.createElement('canvas');
+                  canvas.width  = Math.round(vp.width);
+                  canvas.height = Math.round(vp.height);
+                  /* CSS size = logical pixels, looks sharp on any screen */
+                  canvas.style.width  = Math.round(cW) + 'px';
+                  canvas.style.height = Math.round(vp0.height * cssScale) + 'px';
+
+                  pages.appendChild(canvas);
+                  if (n === 1) zmsp.textContent = Math.round(cssScale * 100) + '%';
+                  return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                });
+              });
+            })(i);
+          }
+          return chain.then(syncBar);
+        });
+    }
+
+    /* lazy-load: only fetch PDF when embed scrolls into view */
+    var loaded = false;
+    var obs = new IntersectionObserver(function(entries) {
+      if (!entries[0].isIntersecting || loaded) return;
+      loaded = true; obs.disconnect();
+      getPdfLib()
+        .then(function(lib) { return renderAll(lib); })
+        .catch(function(e) {
+          loading.style.display = 'none';
+          var errEl = document.createElement('div');
+          errEl.className = 'pdf-embed-err';
+          errEl.textContent = '-- pdf error: ' + e.message;
+          wrap.appendChild(errEl);
+        });
+    }, { threshold: 0.05 });
+    obs.observe(wrap);
+  });
+}
+/* ── end pdf embed ── */
 
 const raw = location.search.slice(1);
 if (raw) {
