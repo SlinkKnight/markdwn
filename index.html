@@ -35,6 +35,629 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--ser
   #layout{padding:0}
   .sep{display:none}
   #editor{padding:24px 18px 80px}
+}
+#star-btn{
+  position:fixed;top:13px;right:16px;
+  background:none;border:none;color:var(--fg4);font-size:22px;
+  cursor:pointer;line-height:1;transition:color 0.15s,transform 0.15s;
+  z-index:100;display:block;padding:0;
+}
+#star-btn:hover{color:var(--yellow);transform:scale(1.15)}
+#star-btn.starred{color:var(--yellow)}
+#rl-panel{
+  position:fixed;top:44px;right:12px;
+  background:var(--bg);border:1px solid var(--bg1);border-radius:3px;
+  min-width:240px;max-width:320px;max-height:60vh;overflow-y:auto;
+  display:none;z-index:99;box-shadow:0 4px 24px rgba(0,0,0,0.5);
+}
+#rl-panel.open{display:block}
+#rl-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--bg1)}
+#rl-header span{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--fg4);text-transform:lowercase}
+#rl-clear{background:none;border:none;font-family:var(--mono);font-size:9px;color:var(--bg3);cursor:pointer;transition:color 0.12s}
+#rl-clear:hover{color:var(--red)}
+#rl-list{list-style:none;padding:4px 0}
+#rl-list li{display:flex;align-items:center;padding:0 8px 0 12px;gap:6px}
+#rl-list li a{flex:1;font-family:var(--mono);font-size:10.5px;color:var(--blue);text-decoration:none;padding:7px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color 0.12s;display:block}
+#rl-list li a:hover{color:var(--aqua)}
+#rl-list li .rl-del{background:none;border:none;color:var(--bg3);cursor:pointer;font-size:12px;line-height:1;transition:color 0.12s;flex-shrink:0}
+#rl-list li .rl-del:hover{color:var(--red)}
+#rl-empty{font-family:var(--mono);font-size:10px;color:var(--bg3);font-style:italic;padding:12px;display:none}
+#empty{display:none;flex-direction:column;align-items:flex-start;justify-content:center;min-height:70vh;gap:3px}
+#empty.visible{display:flex;opacity:0;animation:fi 0.4s 0.05s ease forwards}
+#empty.hidden{display:none!important}
+@keyframes fi{to{opacity:1}}
+.ec{font-family:var(--mono);font-size:12px;color:var(--gray);font-style:italic;line-height:2.1}
+.ec .p{color:var(--bg2)}
+.ec .s{color:var(--blue)}
+#error-msg{font-family:var(--mono);font-size:12px;color:var(--red);margin-bottom:1.2em;display:none}
+#content{opacity:0;transform:translateY(4px);transition:opacity 0.35s ease,transform 0.35s ease}
+#content.visible{opacity:1;transform:none}
+.heading-target{animation:flash 1.2s ease forwards}
+@keyframes flash{0%{background:rgba(250,189,47,0.18)}100%{background:transparent}}
+#content h1.collapsible,#content h2.collapsible,#content h3.collapsible,
+#content h4.collapsible,#content h5.collapsible,#content h6.collapsible{position:relative;cursor:pointer}
+.toggle-arrow{
+  position:absolute;left:-20px;top:50%;
+  transform:translateY(-50%) rotate(90deg);
+  font-size:9px;color:var(--bg4);opacity:0;
+  transition:opacity 0.08s ease,transform 0.1s cubic-bezier(0.4,0,0.2,1),color 0.08s ease;
+  pointer-events:auto;line-height:1;user-select:none;cursor:pointer;
+}
+#content h1.collapsible:hover .toggle-arrow,
+#content h2.collapsible:hover .toggle-arrow,
+#content h3.collapsible:hover .toggle-arrow,
+#content h4.collapsible:hover .toggle-arrow,
+#content h5.collapsible:hover .toggle-arrow,
+#content h6.collapsible:hover .toggle-arrow{opacity:1;color:var(--fg4)}
+.toggle-arrow.collapsed{opacity:1!important;color:var(--fg4);transform:translateY(-50%) rotate(0deg)}
+.section-body{overflow:hidden;transition:max-height 0.12s cubic-bezier(0.4,0,0.2,1),opacity 0.1s ease;max-height:9999px;opacity:1}
+.section-body.collapsed{max-height:0!important;opacity:0}
+#content h1,#content h2,#content h3,#content h4,#content h5,#content h6{font-family:var(--mono);font-weight:400;line-height:1.35;margin:2em 0 0.55em}
+#content h1{font-size:1.48em;font-weight:300;color:var(--fg);border-bottom:1px solid var(--bg1);padding-bottom:0.28em;margin-top:0}
+#content h2{font-size:1.1em;color:var(--yellow)}
+#content h3{font-size:0.77em;text-transform:uppercase;letter-spacing:0.13em;color:var(--fg4)}
+#content h4{font-size:0.9em;color:var(--orange)}
+#content p{margin:0 0 1em;color:var(--fg2);font-family:var(--serif);font-size:15.5px;line-height:1.82}
+#content a{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(131,165,152,0.25);transition:color .12s,border-color .12s}
+#content a:hover{color:var(--aqua);border-color:var(--aqua)}
+#content strong{color:var(--fg);font-weight:600}
+#content em{color:var(--fg3);font-style:italic}
+#content ul,#content ol{padding-left:1.5em;margin:0 0 1em;font-family:var(--serif);font-size:15.5px;color:var(--fg2);line-height:1.82}
+#content li{margin-bottom:0.2em}
+#content li::marker{color:var(--orange);font-family:var(--mono);font-size:13px}
+#content blockquote{border-left:2px solid var(--orange);padding:0.05em 1em;margin:1.2em 0;color:var(--fg4);font-style:italic;font-family:var(--serif);font-size:15.5px;background:rgba(40,36,34,0.5);border-radius:0 2px 2px 0}
+#content hr{border:none;border-top:1px solid var(--bg1);margin:2em 0}
+.table-wrap{overflow-x:auto;margin:1.2em 0;max-width:100%}
+#content table{width:auto;min-width:240px;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;table-layout:auto;margin:0}
+#content th,#content td{white-space:nowrap}
+#content th{text-align:left;padding:6px 20px 6px 12px;background:rgba(60,56,54,0.4);border-bottom:1px solid var(--bg2);color:var(--yellow);font-weight:400;letter-spacing:0.06em}
+#content td{padding:5px 20px 5px 12px;border-bottom:1px solid rgba(60,56,54,0.6);color:var(--fg3)}
+#content tr:last-child td{border-bottom:none}
+#content tr:hover td{background:rgba(60,56,54,0.2)}
+#content code{font-family:var(--mono);font-size:12.5px;background:rgba(60,56,54,0.5);border-radius:2px;padding:1px 5px;color:var(--aqua)}
+#content pre{background:#191b1c!important;border-left:2px solid var(--bg2);padding:13px 16px;overflow-x:auto;margin:1.2em 0;position:relative}
+#content pre code{background:none!important;border:none!important;padding:0!important;font-size:13px;line-height:1.6;color:var(--fg2)}
+#content pre .copy-btn{position:absolute;top:7px;right:8px;background:transparent;border:1px solid var(--bg2);border-radius:2px;color:var(--bg4);cursor:pointer;font-family:var(--mono);font-size:9px;padding:2px 6px;letter-spacing:0.05em;opacity:0;transition:opacity .12s,color .12s,border-color .12s}
+#content pre:hover .copy-btn{opacity:1}
+#content pre .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+#content img{max-width:100%;height:auto;display:block;margin:1.2em 0;border:1px solid var(--bg2);border-radius:2px}
+.img-broken{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--red);background:rgba(251,73,52,0.06);border:1px solid rgba(251,73,52,0.2);border-radius:2px;padding:3px 8px;margin:0.5em 0}
+.katex-display{overflow:visible;padding:6px 0;margin:1.2em 0!important}
+.katex{font-size:1.05em!important}
+.skeleton{display:flex;flex-direction:column;gap:9px}
+.skel-line{height:11px;background:var(--bg1);border-radius:1px;animation:sk 1.8s infinite}
+@keyframes sk{0%,100%{opacity:.2}50%{opacity:.45}}
+.skel-line:nth-child(1){width:50%;height:17px}
+.skel-line:nth-child(2){width:89%}
+.skel-line:nth-child(3){width:73%;animation-delay:.12s}
+.skel-line:nth-child(4){width:95%;animation-delay:.22s}
+.skel-line:nth-child(5){width:61%;animation-delay:.32s}
+.skel-line:nth-child(6){width:83%;animation-delay:.42s}
+.skel-line:nth-child(7){width:42%;animation-delay:.52s;margin-top:5px}
+.hljs-keyword,.hljs-selector-tag{color:#fb4934}
+.hljs-built_in{color:#fabd2f}
+.hljs-type{color:#8ec07c}
+.hljs-string,.hljs-attr{color:#b8bb26}
+.hljs-number,.hljs-literal{color:#d3869b}
+.hljs-comment{color:#928374;font-style:italic}
+.hljs-function,.hljs-title{color:#83a598}
+.hljs-variable,.hljs-name{color:#8ec07c}
+.hljs-params{color:#ebdbb2}
+.hljs-operator,.hljs-punctuation{color:#a89984}
+.hljs-meta{color:#fe8019}
+/* ── PDF embed ─── */
+.pdf-embed{margin:1.4em 0;border:1px solid var(--bg2);border-radius:3px;overflow:hidden;background:#191b1c}
+.pdf-embed-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(60,56,54,0.45);border-bottom:1px solid var(--bg1);flex-wrap:wrap}
+.pdf-embed-title{font-family:var(--mono);font-size:10px;color:var(--fg4);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pdf-embed-bar button{background:none;border:1px solid var(--bg2);border-radius:2px;color:var(--fg4);font-family:var(--mono);font-size:9px;padding:3px 9px;cursor:pointer;transition:color .12s,border-color .12s;white-space:nowrap;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pdf-embed-bar button:hover{color:var(--yellow);border-color:var(--yellow)}
+.pdf-embed-bar button:disabled{opacity:.3;cursor:default}
+.pdf-embed-pageinfo{font-family:var(--mono);font-size:9px;color:var(--fg4);white-space:nowrap}
+.pdf-embed-zoom{font-family:var(--mono);font-size:9px;color:var(--bg3)}
+.pdf-embed-pages{display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px;max-height:70vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pdf-embed-pages::-webkit-scrollbar{width:4px}
+.pdf-embed-pages::-webkit-scrollbar-thumb{background:var(--bg2)}
+.pdf-embed-pages canvas{display:block;max-width:100%;height:auto!important;border:1px solid var(--bg1);border-radius:1px}
+.pdf-embed-loading{font-family:var(--mono);font-size:10px;color:var(--fg4);padding:18px;text-align:center}
+.pdf-embed-err{font-family:var(--mono);font-size:10px;color:var(--red);padding:12px 14px}
+</style>
+</head>
+<body>
+
+<button id="star-btn" title="Reading list">☆</button>
+
+<div id="rl-panel">
+  <div id="rl-header">
+    <span>reading list</span>
+    <button id="rl-clear">clear all</button>
+  </div>
+  <div id="rl-empty">-- no saved urls</div>
+  <ul id="rl-list"></ul>
+</div>
+
+<div id="layout">
+  <div class="sep"></div>
+  <div id="editor">
+    <div id="error-msg"></div>
+    <div id="empty">
+      <div class="ec"><span class="p">--</span> markdwn</div>
+      <div class="ec"><span class="p">--</span> <span class="s">?github.com/user/repo/blob/main/file.md</span></div>
+      <div class="ec"><span class="p">--</span> add <span class="s">#heading</span> to jump to a section</div>
+    </div>
+    <div id="content"></div>
+  </div>
+  <div class="sep"></div>
+</div>
+
+<script>
+const COOKIE_KEY = 'markdwn_rl';
+
+function rlLoad() {
+  const m = document.cookie.match('(?:^|;)\\s*' + COOKIE_KEY + '=([^;]*)');
+  if (!m) return [];
+  try { return JSON.parse(decodeURIComponent(m[1])); } catch { return []; }
+}
+
+function rlSave(list) {
+  const exp = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
+  document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(list))};expires=${exp};path=/`;
+}
+
+let currentUrl = null;
+
+function updateStar() {
+  const btn  = document.getElementById('star-btn');
+  const list = rlLoad();
+  const saved = currentUrl ? list.includes(currentUrl) : list.length > 0;
+  btn.textContent = saved ? '★' : '☆';
+  btn.classList.toggle('starred', saved);
+}
+
+function rlRender() {
+  const list  = rlLoad();
+  const ul    = document.getElementById('rl-list');
+  const empty = document.getElementById('rl-empty');
+  ul.innerHTML = '';
+  empty.style.display = list.length ? 'none' : 'block';
+  list.forEach((url, i) => {
+    const label = url.replace(/^https?:\/\//, '')
+                     .replace('raw.githubusercontent.com/', '')
+                     .replace('github.com/', '');
+    const li  = document.createElement('li');
+    const a   = document.createElement('a');
+    a.href = '?' + url; a.title = url; a.textContent = label;
+    const del = document.createElement('button');
+    del.className = 'rl-del'; del.textContent = '×';
+    del.onclick = e => {
+      e.stopPropagation();
+      const l = rlLoad(); l.splice(i, 1); rlSave(l);
+      rlRender(); updateStar();
+    };
+    li.appendChild(a); li.appendChild(del); ul.appendChild(li);
+  });
+  updateStar();
+}
+
+document.getElementById('star-btn').addEventListener('click', () => {
+  const panel = document.getElementById('rl-panel');
+  if (!currentUrl) { panel.classList.toggle('open'); return; }
+  const list = rlLoad();
+  if (!list.includes(currentUrl)) {
+    list.push(currentUrl); rlSave(list); rlRender();
+    panel.classList.add('open');
+  } else {
+    panel.classList.toggle('open');
+  }
+});
+
+document.getElementById('rl-clear').addEventListener('click', () => {
+  rlSave([]); rlRender();
+});
+
+document.addEventListener('click', e => {
+  const panel = document.getElementById('rl-panel');
+  const star  = document.getElementById('star-btn');
+  if (!panel.contains(e.target) && e.target !== star) panel.classList.remove('open');
+});
+
+function slugify(text) {
+  return text.toLowerCase().replace(/[^\w\s-]/g,'').trim().replace(/[\s_]+/g,'-');
+}
+
+function jumpToHash() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  const target = document.getElementById(hash);
+  if (!target) return;
+  setTimeout(() => {
+    const editor = document.getElementById('editor');
+    editor.scrollTo({ top: target.offsetTop - 32, behavior: 'smooth' });
+    target.classList.add('heading-target');
+    setTimeout(() => target.classList.remove('heading-target'), 1200);
+  }, 80);
+}
+
+function addHeadingIds() {
+  const seen = {};
+  document.querySelectorAll('#content h1,#content h2,#content h3,#content h4,#content h5,#content h6').forEach(h => {
+    let slug = slugify(h.textContent);
+    if (seen[slug] !== undefined) { seen[slug]++; slug += '-' + seen[slug]; } else seen[slug] = 0;
+    h.id = slug;
+  });
+}
+
+function makeCollapsible() {
+  document.querySelectorAll('#content h1,#content h2,#content h3,#content h4,#content h5,#content h6').forEach(h => {
+    const level = parseInt(h.tagName[1]);
+    const body = [];
+    let node = h.nextSibling;
+    while (node) {
+      if (node.nodeType === 1 && /^H[1-6]$/.test(node.tagName) && parseInt(node.tagName[1]) <= level) break;
+      body.push(node);
+      node = node.nextSibling;
+    }
+    if (!body.length) return;
+    h.classList.add('collapsible');
+    const arrow = document.createElement('span');
+    arrow.className = 'toggle-arrow'; arrow.textContent = '▶';
+    h.appendChild(arrow);
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'section-body';
+    body[0].parentNode.insertBefore(bodyDiv, body[0]);
+    body.forEach(n => bodyDiv.appendChild(n));
+    h.addEventListener('click', () => {
+      const c = bodyDiv.classList.toggle('collapsed');
+      arrow.classList.toggle('collapsed', c);
+    });
+  });
+}
+
+function waitFor(fn, cb, ms=50) {
+  if (fn()) cb(); else setTimeout(() => waitFor(fn, cb, ms), ms);
+}
+
+function toRawUrl(raw) {
+  raw = raw.trim();
+  if (!raw.startsWith('http')) raw = 'https://' + raw;
+  if (raw.includes('raw.githubusercontent.com')) return raw;
+  const blob = raw.match(/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)/);
+  if (blob) { const [,u,r,b,p] = blob; return `https://raw.githubusercontent.com/${u}/${r}/${b}/${p}`; }
+  const repo = raw.match(/github\.com\/([^/]+)\/([^/\s?#]+)\/?$/);
+  if (repo) { const [,u,r] = repo; return `https://api.github.com/repos/${u}/${r}/readme`; }
+  return raw;
+}
+
+function getBaseUrl(u) { return u.substring(0, u.lastIndexOf('/') + 1); }
+
+function resolveImageSrc(src, base) {
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    const b = src.match(/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)/);
+    if (b) { const [,u,r,br,p] = b; return `https://raw.githubusercontent.com/${u}/${r}/${br}/${p}`; }
+    return src;
+  }
+  if (src.startsWith('data:')) return src;
+  if (src.startsWith('./')) src = src.slice(2);
+  if (src.startsWith('../')) {
+    let b = base.replace(/\/$/, '');
+    for (const p of src.split('/')) {
+      if (p === '..') b = b.substring(0, b.lastIndexOf('/'));
+      else b += '/' + p;
+    }
+    return b;
+  }
+  return base + src;
+}
+
+function fixImages(base) {
+  document.querySelectorAll('#content img').forEach(img => {
+    img.src = resolveImageSrc(img.getAttribute('src') || '', base);
+    img.loading = 'lazy';
+    img.style.opacity = '0';
+    img.style.transition = 'opacity 0.3s ease';
+    img.onload  = () => { img.style.opacity = '1'; };
+    img.onerror = () => {
+      img.style.display = 'none';
+      const n = document.createElement('span');
+      n.className = 'img-broken';
+      n.textContent = '⚠ ' + (img.getAttribute('src') || 'image not found');
+      img.parentNode.insertBefore(n, img.nextSibling);
+    };
+  });
+}
+
+function showSkeleton() {
+  const c = document.getElementById('content');
+  c.classList.remove('visible');
+  c.innerHTML = `<div class="skeleton">${Array(7).fill('<div class="skel-line"></div>').join('')}</div>`;
+}
+
+function attachCopyBtns() {
+  document.querySelectorAll('#content pre').forEach(pre => {
+    if (pre.querySelector('.copy-btn')) return;
+    const b = document.createElement('button');
+    b.className = 'copy-btn'; b.textContent = 'copy';
+    b.onclick = () => {
+      navigator.clipboard.writeText((pre.querySelector('code') || pre).innerText);
+      b.textContent = 'copied'; setTimeout(() => b.textContent = 'copy', 1400);
+    };
+    pre.appendChild(b);
+  });
+}
+
+function wrapTables() {
+  document.querySelectorAll('#content table').forEach(t => {
+    if (t.parentElement.classList.contains('table-wrap')) return;
+    const w = document.createElement('div');
+    w.className = 'table-wrap';
+    t.parentNode.insertBefore(w, t); w.appendChild(t);
+  });
+}
+
+async function loadMarkdown(rawUrl) {
+  showSkeleton();
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('empty').classList.add('hidden');
+  try {
+    let md;
+    if (rawUrl.includes('api.github.com') && rawUrl.endsWith('/readme')) {
+      const r = await fetch(rawUrl, { headers: { Accept: 'application/vnd.github.raw' } });
+      if (!r.ok) throw new Error(`GitHub API ${r.status}`);
+      md = await r.text();
+      rawUrl = rawUrl.replace('api.github.com/repos', 'raw.githubusercontent.com').replace('/readme', '/HEAD/README.md');
+    } else {
+      const r = await fetch(rawUrl);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      md = await r.text();
+    }
+    currentUrl = location.search.slice(1);
+    updateStar();
+    const base    = getBaseUrl(rawUrl);
+    const content = document.getElementById('content');
+    waitFor(() => typeof marked !== 'undefined', () => {
+      marked.setOptions({ gfm: true, breaks: false });
+      content.innerHTML = marked.parse(md);
+      addHeadingIds();
+      makeCollapsible();
+      fixImages(base);
+      wrapTables();
+      attachCopyBtns();
+      embedPdfs(base);
+      if (typeof hljs !== 'undefined')
+        content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+      if (typeof renderMathInElement !== 'undefined')
+        renderMathInElement(content, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true  },
+            { left: '$',  right: '$',  display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true  },
+          ],
+          throwOnError: false, errorColor: '#fb4934',
+        });
+      requestAnimationFrame(() => { content.classList.add('visible'); jumpToHash(); });
+    });
+  } catch(e) {
+    document.getElementById('content').innerHTML = '';
+    const empty = document.getElementById('empty');
+    empty.classList.remove('hidden');
+    empty.classList.add('visible');
+    const err = document.getElementById('error-msg');
+    err.textContent = '-- error: ' + e.message; err.style.display = 'block';
+  }
+}
+
+rlRender();
+
+/* ── PDF embed ─────────────────────────────────────────────────────────── */
+// Uses PDF.js 3.11 (legacy build) — broad mobile/Safari compatibility,
+// no Promise.withResolvers, no ES2022 features required.
+const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+
+let _pdfjsLib = null;
+let _pdfjsLoading = null;
+
+function loadPdfjsLib() {
+  if (_pdfjsLib) return Promise.resolve(_pdfjsLib);
+  if (_pdfjsLoading) return _pdfjsLoading;
+  _pdfjsLoading = new Promise(function(res, rej) {
+    // Load the non-module legacy build — works on all mobile browsers
+    var s = document.createElement('script');
+    s.src = PDFJS_CDN + 'pdf.min.js';
+    s.onload = function() {
+      var lib = window['pdfjs-dist/build/pdf'];
+      if (!lib) { rej(new Error('PDF.js not found')); return; }
+      lib.GlobalWorkerOptions.workerSrc = PDFJS_CDN + 'pdf.worker.min.js';
+      _pdfjsLib = lib;
+      res(lib);
+    };
+    s.onerror = function() { rej(new Error('Failed to load PDF.js')); };
+    document.head.appendChild(s);
+  });
+  return _pdfjsLoading;
+}
+
+function embedPdfs(base) {
+  document.querySelectorAll('#content img').forEach(function(img) {
+    var src = img.getAttribute('src') || '';
+    if (!/\.pdf(\?|#|$)/i.test(src)) return;
+
+    var pdfUrl = src.startsWith('http') ? src : base + src.replace(/^\.\//, '');
+    var label  = img.getAttribute('alt') || src.split('/').pop();
+
+    // Build widget
+    var embed = document.createElement('div');
+    embed.className = 'pdf-embed';
+
+    var bar = document.createElement('div');
+    bar.className = 'pdf-embed-bar';
+
+    var title = document.createElement('span');
+    title.className = 'pdf-embed-title';
+    title.textContent = label;
+
+    var prev = document.createElement('button');
+    prev.textContent = '◀'; prev.disabled = true;
+
+    var info = document.createElement('span');
+    info.className = 'pdf-embed-pageinfo';
+    info.textContent = '– / –';
+
+    var next = document.createElement('button');
+    next.textContent = '▶'; next.disabled = true;
+
+    var zoom = document.createElement('span');
+    zoom.className = 'pdf-embed-zoom';
+
+    var dl = document.createElement('a');
+    dl.href = pdfUrl; dl.target = '_blank'; dl.rel = 'noopener';
+    var dlBtn = document.createElement('button');
+    dlBtn.textContent = '↓'; dl.appendChild(dlBtn);
+
+    bar.append(title, prev, info, next, zoom, dl);
+
+    var loading = document.createElement('div');
+    loading.className = 'pdf-embed-loading';
+    loading.textContent = '-- loading pdf…';
+
+    var pages = document.createElement('div');
+    pages.className = 'pdf-embed-pages';
+    pages.style.display = 'none';
+
+    embed.append(bar, loading, pages);
+    img.parentNode.replaceChild(embed, img);
+
+    var total = 0, current = 1;
+
+    function updateBar() {
+      info.textContent = current + ' / ' + total;
+      prev.disabled = current <= 1;
+      next.disabled = current >= total;
+    }
+
+    function scrollToPage(n) {
+      var canvases = pages.querySelectorAll('canvas');
+      if (canvases[n - 1]) canvases[n - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    pages.addEventListener('scroll', function() {
+      var canvases = pages.querySelectorAll('canvas');
+      var pr = pages.getBoundingClientRect();
+      canvases.forEach(function(c, i) {
+        var r = c.getBoundingClientRect();
+        if (r.top <= pr.top + pr.height / 2 && r.bottom >= pr.top) {
+          if (current !== i + 1) { current = i + 1; updateBar(); }
+        }
+      });
+    });
+
+    prev.addEventListener('click', function() { if (current > 1) { current--; scrollToPage(current); updateBar(); } });
+    next.addEventListener('click', function() { if (current < total) { current++; scrollToPage(current); updateBar(); } });
+
+    function renderAll(lib) {
+      return lib.getDocument({ url: pdfUrl, cMapUrl: PDFJS_CDN + 'cmaps/', cMapPacked: true }).promise
+        .then(function(doc) {
+          total = doc.numPages;
+          pages.style.display = 'flex';
+          loading.style.display = 'none';
+          var containerW = Math.max(200, embed.clientWidth - 32);
+          var dpr = window.devicePixelRatio || 1;
+          var chain = Promise.resolve();
+          for (var i = 1; i <= total; i++) {
+            (function(pageNum) {
+              chain = chain.then(function() {
+                return doc.getPage(pageNum).then(function(page) {
+                  var vp0    = page.getViewport({ scale: 1 });
+                  // Scale to fill container width, then multiply by DPR for sharpness
+                  var cssScale = containerW / vp0.width;
+                  var renderScale = cssScale * dpr;
+                  var vp = page.getViewport({ scale: renderScale });
+                  var canvas = document.createElement('canvas');
+                  // Canvas physical pixels = rendered at full DPR resolution
+                  canvas.width  = vp.width;
+                  canvas.height = vp.height;
+                  // CSS size = container width, height proportional
+                  canvas.style.width  = containerW + 'px';
+                  canvas.style.height = Math.round(vp0.height * cssScale) + 'px';
+                  pages.appendChild(canvas);
+                  if (pageNum === 1) zoom.textContent = Math.round(cssScale * 100) + '%';
+                  return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                });
+              });
+            })(i);
+          }
+          return chain.then(function() { updateBar(); });
+        });
+    }
+
+    var loaded = false;
+    var obs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting && !loaded) {
+        loaded = true; obs.disconnect();
+        loadPdfjsLib()
+          .then(function(lib) { return renderAll(lib); })
+          .catch(function(e) {
+            loading.style.display = 'none';
+            var err = document.createElement('div');
+            err.className = 'pdf-embed-err';
+            err.textContent = '-- pdf error: ' + e.message;
+            embed.appendChild(err);
+          });
+      }
+    }, { threshold: 0.05 });
+    obs.observe(embed);
+  });
+}
+/* ── end PDF embed ─────────────────────────────────────────────────────── */
+
+const raw = location.search.slice(1);
+if (raw) {
+  const hi = raw.indexOf('#');
+  const urlPart = hi === -1 ? raw : raw.slice(0, hi);
+  if (hi !== -1 && !location.hash)
+    history.replaceState(null, '', location.search + '#' + raw.slice(hi + 1));
+  loadMarkdown(toRawUrl(decodeURIComponent(urlPart)));
+} else {
+  document.getElementById('empty').classList.add('visible');
+}
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>markdwn</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><circle cx='100' cy='100' r='96' fill='%231d2021' stroke='%233c3836' stroke-width='2'/><text x='100' y='108' text-anchor='middle' font-family='Georgia,serif' font-size='106' font-weight='400' fill='%23ebdbb2' dominant-baseline='central'>M</text><rect x='58' y='132' width='84' height='3.5' rx='1.7' fill='%23d5c4a1' opacity='.6'/><rect x='58' y='144' width='64' height='3.5' rx='1.7' fill='%23bdae93' opacity='.45'/><rect x='58' y='156' width='76' height='3.5' rx='1.7' fill='%23bdae93' opacity='.38'/></svg>">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap"></noscript>
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"></noscript>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1d2021;--bg1:#3c3836;--bg2:#504945;--bg3:#665c54;--bg4:#7c6f64;
+  --fg:#ebdbb2;--fg2:#d5c4a1;--fg3:#bdae93;--fg4:#a89984;
+  --red:#fb4934;--green:#b8bb26;--yellow:#fabd2f;--blue:#83a598;
+  --aqua:#8ec07c;--orange:#fe8019;--purple:#d3869b;--gray:#928374;
+  --mono:ui-monospace,'Cascadia Code',Consolas,'Courier New',monospace;
+  --serif:'Lora',Georgia,serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--serif);font-size:16px;line-height:1.82;-webkit-font-smoothing:antialiased}
+#layout{display:flex;flex-direction:row;align-items:stretch;height:100vh;padding:0 16vw}
+.sep{width:2px;flex-shrink:0;background:var(--bg1);opacity:0.6}
+#editor{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;height:100vh;padding:48px 40px 120px 58px;position:relative}
+#editor::-webkit-scrollbar{width:5px}
+#editor::-webkit-scrollbar-track{background:transparent}
+#editor::-webkit-scrollbar-thumb{background:var(--bg2)}
+#editor::-webkit-scrollbar-thumb:hover{background:var(--bg3)}
+@media(max-width:640px){
+  #layout{padding:0}
+  .sep{display:none}
+  #editor{padding:24px 18px 80px}
   #empty{padding:24px 18px 80px}
 }
 #star-btn{
