@@ -6,7 +6,6 @@
 <title>markdwn</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><circle cx='100' cy='100' r='96' fill='%231d2021' stroke='%233c3836' stroke-width='2'/><text x='100' y='108' text-anchor='middle' font-family='Georgia,serif' font-size='106' font-weight='400' fill='%23ebdbb2' dominant-baseline='central'>M</text><rect x='58' y='132' width='84' height='3.5' rx='1.7' fill='%23d5c4a1' opacity='.6'/><rect x='58' y='144' width='64' height='3.5' rx='1.7' fill='%23bdae93' opacity='.45'/><rect x='58' y='156' width='76' height='3.5' rx='1.7' fill='%23bdae93' opacity='.38'/></svg>">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.mjs" type="module" id="pdfjs-script"></script>
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap"></noscript>
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -144,36 +143,49 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--ser
 .hljs-params{color:#ebdbb2}
 .hljs-operator,.hljs-punctuation{color:#a89984}
 .hljs-meta{color:#fe8019}
-/* PDF viewer */
-#pdf-viewer{display:none;flex-direction:column;gap:0}
-#pdf-viewer.active{display:flex}
-#pdf-toolbar{
-  position:sticky;top:0;z-index:10;
-  display:flex;align-items:center;gap:10px;
-  background:var(--bg);border-bottom:1px solid var(--bg1);
-  padding:8px 0 10px;margin-bottom:16px;
+
+/* ── PDF embed ─────────────────────────────────────────── */
+.pdf-embed{
+  margin:1.4em 0;border:1px solid var(--bg2);border-radius:3px;
+  overflow:hidden;background:#191b1c;
 }
-#pdf-toolbar button{
+.pdf-embed-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;background:rgba(60,56,54,0.45);
+  border-bottom:1px solid var(--bg1);
+}
+.pdf-embed-title{
+  font-family:var(--mono);font-size:10px;color:var(--fg4);
+  flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.pdf-embed-bar button{
   background:none;border:1px solid var(--bg2);border-radius:2px;
-  color:var(--fg4);font-family:var(--mono);font-size:10px;
-  padding:3px 9px;cursor:pointer;transition:color .12s,border-color .12s;
+  color:var(--fg4);font-family:var(--mono);font-size:9px;
+  padding:2px 7px;cursor:pointer;transition:color .12s,border-color .12s;white-space:nowrap;
 }
-#pdf-toolbar button:hover{color:var(--yellow);border-color:var(--yellow)}
-#pdf-toolbar button:disabled{opacity:.3;cursor:default}
-#pdf-page-info{font-family:var(--mono);font-size:10px;color:var(--fg4);white-space:nowrap}
-#pdf-zoom{font-family:var(--mono);font-size:10px;color:var(--fg4);margin-left:auto}
-#pdf-pages{display:flex;flex-direction:column;gap:16px;align-items:center}
-.pdf-page-wrap{position:relative;display:inline-block}
-.pdf-page-wrap canvas{
+.pdf-embed-bar button:hover{color:var(--yellow);border-color:var(--yellow)}
+.pdf-embed-bar button:disabled{opacity:.3;cursor:default}
+.pdf-embed-pageinfo{font-family:var(--mono);font-size:9px;color:var(--fg4);white-space:nowrap}
+.pdf-embed-zoom{font-family:var(--mono);font-size:9px;color:var(--bg3)}
+.pdf-embed-pages{
+  display:flex;flex-direction:column;align-items:center;
+  gap:12px;padding:14px;max-height:70vh;overflow-y:auto;
+}
+.pdf-embed-pages::-webkit-scrollbar{width:4px}
+.pdf-embed-pages::-webkit-scrollbar-thumb{background:var(--bg2)}
+.pdf-embed-pages canvas{
   display:block;max-width:100%;height:auto;
-  border:1px solid var(--bg2);border-radius:2px;
-  box-shadow:0 2px 12px rgba(0,0,0,0.35);
+  border:1px solid var(--bg1);border-radius:1px;
 }
-.pdf-page-num{
-  font-family:var(--mono);font-size:9px;color:var(--bg3);
-  text-align:center;margin-top:4px;
+.pdf-embed-loading{
+  font-family:var(--mono);font-size:10px;color:var(--fg4);
+  padding:18px;text-align:center;
 }
-#pdf-loading{font-family:var(--mono);font-size:11px;color:var(--fg4);padding:12px 0;display:none}
+.pdf-embed-err{
+  font-family:var(--mono);font-size:10px;color:var(--red);
+  padding:12px 14px;
+}
+/* ── end PDF embed ─────────────────────────────────────── */
 </style>
 </head>
 <body>
@@ -196,20 +208,9 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:var(--ser
     <div id="empty">
       <div class="ec"><span class="p">--</span> markdwn</div>
       <div class="ec"><span class="p">--</span> <span class="s">?github.com/user/repo/blob/main/file.md</span></div>
-      <div class="ec"><span class="p">--</span> <span class="s">?https://example.com/document.pdf</span></div>
       <div class="ec"><span class="p">--</span> add <span class="s">#heading</span> to jump to a section</div>
     </div>
     <div id="content"></div>
-    <div id="pdf-viewer">
-      <div id="pdf-toolbar">
-        <button id="pdf-prev" disabled>◀ prev</button>
-        <span id="pdf-page-info">-- / --</span>
-        <button id="pdf-next" disabled>next ▶</button>
-        <span id="pdf-zoom"></span>
-      </div>
-      <div id="pdf-loading">-- rendering pdf…</div>
-      <div id="pdf-pages"></div>
-    </div>
   </div>
   <div class="sep"></div>
 </div>
@@ -446,6 +447,7 @@ async function loadMarkdown(rawUrl) {
       fixImages(base);
       wrapTables();
       attachCopyBtns();
+      embedPdfs(base);
       if (typeof hljs !== 'undefined')
         content.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
       if (typeof renderMathInElement !== 'undefined')
@@ -470,163 +472,171 @@ async function loadMarkdown(rawUrl) {
 
 rlRender();
 
-/* ── PDF support ─────────────────────────────────────── */
-let pdfDoc = null;
-let pdfCurrentPage = 1;
-let pdfTotalPages  = 0;
-let pdfRendering   = false;
+/* ── PDF embed ───────────────────────────────────────────────────────────── */
 const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/';
 
-function isPdfUrl(url) {
-  return /\.pdf(\?|#|$)/i.test(url);
-}
-
-async function getPdfjsLib() {
-  if (window.pdfjsLib) return window.pdfjsLib;
+let _pdfjsLib = null;
+function loadPdfjsLib() {
+  if (_pdfjsLib) return Promise.resolve(_pdfjsLib);
   return new Promise((res, rej) => {
-    const m = document.createElement('script');
-    m.type = 'module';
-    m.textContent = `
-      import * as pdfjsLib from '${PDFJS_CDN}pdf.min.mjs';
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '${PDFJS_CDN}pdf.worker.min.mjs';
-      window.pdfjsLib = pdfjsLib;
-      window.dispatchEvent(new Event('pdfjs-ready'));
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.textContent = `
+      import * as lib from '${PDFJS_CDN}pdf.min.mjs';
+      lib.GlobalWorkerOptions.workerSrc = '${PDFJS_CDN}pdf.worker.min.mjs';
+      window.__pdfjsLib = lib;
+      window.dispatchEvent(new Event('__pdfjs_ready'));
     `;
-    window.addEventListener('pdfjs-ready', () => res(window.pdfjsLib), { once: true });
-    m.onerror = rej;
-    document.head.appendChild(m);
+    window.addEventListener('__pdfjs_ready', () => { _pdfjsLib = window.__pdfjsLib; res(_pdfjsLib); }, { once: true });
+    s.onerror = rej;
+    document.head.appendChild(s);
   });
 }
 
-function pdfUpdateToolbar() {
-  document.getElementById('pdf-page-info').textContent =
-    `${pdfCurrentPage} / ${pdfTotalPages}`;
-  document.getElementById('pdf-prev').disabled = pdfCurrentPage <= 1;
-  document.getElementById('pdf-next').disabled = pdfCurrentPage >= pdfTotalPages;
-}
+// Intercept marked image renderer to detect .pdf links and replace with embed widget
+function embedPdfs(base) {
+  document.querySelectorAll('#content img').forEach(img => {
+    const src = img.getAttribute('src') || '';
+    if (!/\.pdf(\?|#|$)/i.test(src)) return;
 
-async function pdfRenderPage(num) {
-  if (!pdfDoc || pdfRendering) return;
-  pdfRendering = true;
-  const page     = await pdfDoc.getPage(num);
-  const editorW  = document.getElementById('editor').clientWidth - 80;
-  const vp0      = page.getViewport({ scale: 1 });
-  const scale    = Math.min(2, editorW / vp0.width);
-  const vp       = page.getViewport({ scale });
+    // Resolve PDF URL relative to the markdown base
+    const pdfUrl = src.startsWith('http') ? src : base + src.replace(/^\.\//, '');
+    const label  = img.getAttribute('alt') || src.split('/').pop();
 
-  const wrap = document.createElement('div');
-  wrap.className = 'pdf-page-wrap';
-  const canvas = document.createElement('canvas');
-  canvas.width  = vp.width;
-  canvas.height = vp.height;
-  canvas.style.width  = vp0.width + 'px';
-  canvas.style.height = vp0.height + 'px';
-  const label = document.createElement('div');
-  label.className  = 'pdf-page-num';
-  label.textContent = `${num}`;
-  wrap.appendChild(canvas);
-  wrap.appendChild(label);
+    // Build embed widget
+    const embed   = document.createElement('div');
+    embed.className = 'pdf-embed';
 
-  const pages = document.getElementById('pdf-pages');
-  pages.appendChild(wrap);
+    const bar     = document.createElement('div');
+    bar.className = 'pdf-embed-bar';
 
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-  document.getElementById('pdf-zoom').textContent =
-    `${Math.round(scale * 100)}%`;
-  pdfRendering = false;
-}
+    const title   = document.createElement('span');
+    title.className = 'pdf-embed-title';
+    title.textContent = '⬚ ' + label;
 
-async function pdfRenderAll() {
-  const pages = document.getElementById('pdf-pages');
-  pages.innerHTML = '';
-  document.getElementById('pdf-loading').style.display = 'block';
-  document.getElementById('pdf-toolbar').querySelector('#pdf-prev').disabled = true;
-  document.getElementById('pdf-toolbar').querySelector('#pdf-next').disabled = true;
-  for (let i = 1; i <= pdfTotalPages; i++) {
-    pdfCurrentPage = i;
-    await pdfRenderPage(i);
-  }
-  pdfCurrentPage = 1;
-  document.getElementById('pdf-loading').style.display = 'none';
-  pdfUpdateToolbar();
-}
+    const prev    = document.createElement('button');
+    prev.textContent = '◀'; prev.disabled = true;
 
-async function loadPdf(url) {
-  document.getElementById('content').innerHTML    = '';
-  document.getElementById('content').classList.remove('visible');
-  document.getElementById('empty').style.display  = 'none';
-  document.getElementById('error-msg').style.display = 'none';
-  const viewer = document.getElementById('pdf-viewer');
-  viewer.classList.add('active');
-  document.getElementById('pdf-pages').innerHTML  = '';
-  document.getElementById('pdf-loading').style.display = 'block';
+    const info    = document.createElement('span');
+    info.className = 'pdf-embed-pageinfo';
+    info.textContent = '– / –';
 
-  try {
-    const lib = await getPdfjsLib();
-    pdfDoc = await lib.getDocument({
-      url,
-      cMapUrl: PDFJS_CDN + 'cmaps/',
-      cMapPacked: true,
-    }).promise;
-    pdfTotalPages = pdfDoc.numPages;
-    currentUrl = location.search.slice(1);
-    updateStar();
-    await pdfRenderAll();
-  } catch(e) {
-    viewer.classList.remove('active');
-    document.getElementById('empty').style.display = 'flex';
-    const err = document.getElementById('error-msg');
-    err.textContent = '-- pdf error: ' + e.message;
-    err.style.display = 'block';
-    document.getElementById('pdf-loading').style.display = 'none';
-  }
-}
+    const next    = document.createElement('button');
+    next.textContent = '▶'; next.disabled = true;
 
-document.getElementById('pdf-prev').addEventListener('click', async () => {
-  if (pdfCurrentPage <= 1) return;
-  pdfCurrentPage--;
-  const wraps = document.querySelectorAll('.pdf-page-wrap');
-  if (wraps[pdfCurrentPage - 1]) {
-    wraps[pdfCurrentPage - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-  pdfUpdateToolbar();
-});
-document.getElementById('pdf-next').addEventListener('click', async () => {
-  if (pdfCurrentPage >= pdfTotalPages) return;
-  pdfCurrentPage++;
-  const wraps = document.querySelectorAll('.pdf-page-wrap');
-  if (wraps[pdfCurrentPage - 1]) {
-    wraps[pdfCurrentPage - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-  pdfUpdateToolbar();
-});
+    const zoom    = document.createElement('span');
+    zoom.className = 'pdf-embed-zoom';
 
-// Scroll-based page tracking
-document.getElementById('editor').addEventListener('scroll', () => {
-  if (!pdfDoc) return;
-  const wraps = document.querySelectorAll('.pdf-page-wrap');
-  const editorRect = document.getElementById('editor').getBoundingClientRect();
-  wraps.forEach((w, i) => {
-    const r = w.getBoundingClientRect();
-    if (r.top <= editorRect.top + editorRect.height / 2 && r.bottom >= editorRect.top) {
-      if (pdfCurrentPage !== i + 1) { pdfCurrentPage = i + 1; pdfUpdateToolbar(); }
+    const dl      = document.createElement('a');
+    dl.href = pdfUrl; dl.download = ''; dl.target = '_blank';
+    const dlBtn   = document.createElement('button');
+    dlBtn.textContent = '↓ download';
+    dl.appendChild(dlBtn);
+
+    bar.append(title, prev, info, next, zoom, dl);
+
+    const loading = document.createElement('div');
+    loading.className = 'pdf-embed-loading';
+    loading.textContent = '-- loading pdf…';
+
+    const pages   = document.createElement('div');
+    pages.className = 'pdf-embed-pages';
+    pages.style.display = 'none';
+
+    embed.append(bar, loading, pages);
+    img.parentNode.replaceChild(embed, img);
+
+    // State
+    let doc = null, total = 0, current = 1;
+
+    function updateBar() {
+      info.textContent = `${current} / ${total}`;
+      prev.disabled = current <= 1;
+      next.disabled = current >= total;
     }
+
+    async function renderAll(pdfjsLib) {
+      doc   = await pdfjsLib.getDocument({
+        url: pdfUrl,
+        cMapUrl: PDFJS_CDN + 'cmaps/',
+        cMapPacked: true,
+      }).promise;
+      total = doc.numPages;
+      pages.style.display = 'flex';
+      loading.style.display = 'none';
+
+      const containerW = embed.clientWidth - 32; // padding
+      for (let i = 1; i <= total; i++) {
+        const page = await doc.getPage(i);
+        const vp0  = page.getViewport({ scale: 1 });
+        const scale = Math.min(2, containerW / vp0.width);
+        const vp   = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width  = vp.width;
+        canvas.height = vp.height;
+        canvas.style.width  = Math.round(vp0.width * Math.min(1, containerW / vp0.width)) + 'px';
+        canvas.style.height = 'auto';
+        pages.appendChild(canvas);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+        if (i === 1) { zoom.textContent = Math.round(scale * 100) + '%'; }
+      }
+      updateBar();
+    }
+
+    // Scroll → update current page counter
+    pages.addEventListener('scroll', () => {
+      const canvases = pages.querySelectorAll('canvas');
+      canvases.forEach((c, i) => {
+        const r = c.getBoundingClientRect();
+        const pr = pages.getBoundingClientRect();
+        if (r.top <= pr.top + pr.height / 2 && r.bottom >= pr.top) {
+          if (current !== i + 1) { current = i + 1; updateBar(); }
+        }
+      });
+    });
+
+    prev.addEventListener('click', () => {
+      if (current <= 1) return;
+      current--;
+      pages.querySelectorAll('canvas')[current - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      updateBar();
+    });
+    next.addEventListener('click', () => {
+      if (current >= total) return;
+      current++;
+      pages.querySelectorAll('canvas')[current - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      updateBar();
+    });
+
+    // Load on first visibility (IntersectionObserver for performance)
+    let loaded = false;
+    const obs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !loaded) {
+        loaded = true;
+        obs.disconnect();
+        loadPdfjsLib()
+          .then(lib => renderAll(lib))
+          .catch(e => {
+            loading.textContent = '';
+            const err = document.createElement('div');
+            err.className = 'pdf-embed-err';
+            err.textContent = '-- pdf error: ' + e.message;
+            embed.appendChild(err);
+          });
+      }
+    }, { threshold: 0.05 });
+    obs.observe(embed);
   });
-});
-/* ── end PDF support ─────────────────────────────────── */
+}
+/* ── end PDF embed ───────────────────────────────────────────────────────── */
 
 const raw = location.search.slice(1);
 if (raw) {
   const hi = raw.indexOf('#');
   const urlPart = hi === -1 ? raw : raw.slice(0, hi);
-  const decoded = decodeURIComponent(urlPart);
   if (hi !== -1 && !location.hash)
     history.replaceState(null, '', location.search + '#' + raw.slice(hi + 1));
-  if (isPdfUrl(decoded)) {
-    loadPdf(decoded);
-  } else {
-    loadMarkdown(toRawUrl(decoded));
-  }
+  loadMarkdown(toRawUrl(decodeURIComponent(urlPart)));
 }
 </script>
 </body>
